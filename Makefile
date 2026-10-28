@@ -5,6 +5,8 @@
 # Paths: DATA must match the "device:" paths in srcs/compose.yaml
 COMPOSE_FILE	= srcs/docker-compose.yaml
 ENV_FILE		= srcs/.env
+SECRETS = secrets/db_password.txt secrets/db_root_password.txt \
+          secrets/wp_admin_password.txt secrets/wp_user_password.txt
 DATA			= /home/wivallee/data
 
 COMPOSE			= docker compose -f $(COMPOSE_FILE)
@@ -20,7 +22,9 @@ all: up
 check:
 	@test -f $(COMPOSE_FILE) || (echo "Missing $(COMPOSE_FILE)" && exit 1)
 	@test -f $(ENV_FILE) || (echo "Missing $(ENV_FILE)" && exit 1)
-
+	@for f in $(SECRETS); do \
+		test -s $$f || (echo "Missing or empty secret: $$f" && exit 1); \
+	done
 # Create the host folders used by the named volumes
 dirs:
 	@mkdir -p $(DATA)/wordpress $(DATA)/mariadb
