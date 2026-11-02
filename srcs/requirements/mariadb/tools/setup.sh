@@ -19,17 +19,8 @@ fi
 if [ ! -d "/var/lib/mysql/${MYSQL_DATABASE}" ]; then
     echo "Creating database and users..."
 
-    mariadbd --user=mysql --skip-networking &
-    pid=$!
-
-    for i in $(seq 1 30); do
-        if mariadb-admin ping --silent; then
-            break
-        fi
-        sleep 1
-    done
-
-    mariadb -u root <<EOF
+    mariadbd --user=mysql --bootstrap <<EOF
+FLUSH PRIVILEGES;
 DROP USER IF EXISTS ''@'localhost';
 DROP USER IF EXISTS ''@'%';
 CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\`;
@@ -39,8 +30,6 @@ ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;
 EOF
 
-    mariadb-admin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
-    wait "$pid"
     echo "Initialization done."
 fi
 
